@@ -6,6 +6,9 @@
 # using the sediment bioreactors run in 2017, 2018, and 2019 for
 # the sediment nutrient recycling manuscript.
 
+
+# Setup -------------------------------------------------------------------
+
 # Load packages
 library(tidyverse) 
 library(lubridate)
@@ -56,3 +59,53 @@ tdndat_ed <- tdndat %>%
 
 # Stack three datasets on one another
 nutdat <- bind_rows(nh4dat_ed, no3dat_ed, tdndat_ed)
+
+# And finally, remove the cores that were pulled due to leakage/other issues
+# These filters should cover any and all analytes
+# Note, some of these will be missing to begin with, since the analytes were never measured
+nutdat_clean <- nutdat %>%
+  mutate(mean_clean = case_when(
+    Year == 2017 & Site == "MICR" & Sample_ID == "Paul" ~ NA_real_,
+    Year == 2018 & Site == "MICR" & Sample_ID == "Orange" ~ NA_real_,
+    Year == 2018 & Site == "MICR" & Sample_ID == "Pink" ~ NA_real_,
+    Year == 2019 & Site == "ABUR" & Sample_ID == "Blue" ~ NA_real_,
+    Year == 2019 & Site == "GOLB" & Sample_ID == "Orange" ~ NA_real_,
+    Year == 2019 & Site == "MICR" & Sample_ID == "Red" ~ NA_real_,
+    TRUE ~ mean)) # making a new column because filtering wasn't working appropriately
+
+# Flux Calculations -------------------------------------------------------
+
+# Creating a newly revised for loop to calculate changes in concentration
+
+site_list <- c("ABUR", "MICR", "GOLB") # create sortable site list
+analyte_list <- c("NH4", "NO3", "TDN") # same for analytes
+
+for(year in 2017:2019){ # iterate over year
+  for(site in site_list){ # followed by site
+    for(analyte in analyte_list){ # followed by analyte
+  
+  # filter by iteration
+  newdat <- nutdat_clean %>%
+    filter(Year == year & Site == site & Analyte == analyte)
+  
+  # create variable for starting concentration of seawater
+  start <- newdat %>%
+    filter(Treatment == "Before") %>%
+    pull(mean_clean)
+  
+  # calculate changes and rates
+  changes <- newdat %>%
+    mutate(change = mean_clean - start) %>%
+    mutate(change_hr = change / 3) # all bioreactors run for 3 hours
+    
+  # export data
+  file.name <- paste0("data_analyses/", site, "_", year, "_", 
+                      analyte, ".rds") # create file name
+  saveRDS(changes, file=file.name)
+  
+    }
+  }
+}
+
+
+
