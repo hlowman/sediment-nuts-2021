@@ -14,6 +14,7 @@ library(tidyverse)
 library(lubridate)
 library(viridis)
 library(patchwork)
+library(here)
 
 # Load necessary datasets
 nh4dat <- read_csv("data_raw/Bioreactor_NH4_2017_2019.csv")
@@ -73,6 +74,7 @@ nutdat_clean <- nutdat %>%
     Year == 2019 & Site == "MICR" & Sample_ID == "Red" ~ NA_real_,
     TRUE ~ mean)) # making a new column because filtering wasn't working appropriately
 
+
 # Flux Calculations -------------------------------------------------------
 
 # Creating a newly revised for loop to calculate changes in concentration
@@ -99,7 +101,7 @@ for(year in 2017:2019){ # iterate over year
     mutate(change_hr = change / 3) # all bioreactors run for 3 hours
     
   # export data
-  file.name <- paste0("data_analyses/", site, "_", year, "_", 
+  file.name <- paste0(site, "_", year, "_", 
                       analyte, ".rds") # create file name
   saveRDS(changes, file=file.name)
   
@@ -107,5 +109,46 @@ for(year in 2017:2019){ # iterate over year
   }
 }
 
+# load in and combine all the created datasets
+# I chose to export the files so that I could see they mapped correctly individually
+# also for loops need empty receiving dataframes in the environment,
+# so it's often easier to export the files to a working data directory instead
+nutdat_changes <- here("data_analyses/") %>%
+  list.files(pattern = ".rds") %>%
+  map(readRDS) %>%
+  bind_rows()
+
+# Check to be sure it all looks alright
+View(nutdat_changes)
+# woohoo!!
+
+# Next, I'll trim down the dataset to help with flux calculations
+nutdat_trim <- nutdat_changes %>%
+  filter(Treatment %in% c("Control", "Experimental")) %>% # filter out the "before" samples
+  # since they have already served their purpose
+  select(Year, Site, Treatment, Analyte, change_hr) # trim columns
+
+# Need to aggregate by control/experimental treatment for each run to calculate net flux
+nutdat_net <- nutdat_trim %>%
+  group_by(Year, Site, Treatment, Analyte) %>%
+  summarize(mean_change_hr = mean(change_hr, na.rm = TRUE)) %>%
+  ungroup() %>%
+  pivot_wider(names_from = Treatment, values_from = mean_change_hr) %>%
+  rename(Experimental_change_hr = Experimental, Control_change_hr = Control) %>%
+  mutate(Net_change_hr = Experimental_change_hr - Control_change_hr) %>%
+  # convert net flux to umol/m^2 * hour
+  mutate(Net_change_hr_m2 = (Net_change_hr * 0.25 * 10000) / 19.6)
 
 
+# Summary Stats -----------------------------------------------------------
+
+# Running some additional calculations for inclusion in the manuscript.
+summary <- nutdat_net %>%
+  group_by(Analyte) %>%
+  summarize(mean_all = mean(Net_change_hr_m2, na.rm = TRUE),
+            min_all = min(Net_change_hr_m2, na.rm = TRUE),
+            max_all = max(Net_change_hr_m2, na.rm = TRUE)) %>%
+  ungroup() %>%
+  mutate(daily_mean = mean_all * 24) # convert mean flux to umol/m^2 * day
+
+# End of script.
