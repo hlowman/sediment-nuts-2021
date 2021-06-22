@@ -101,7 +101,7 @@ for(year in 2017:2019){ # iterate over year
     mutate(change_hr = change / 3) # all bioreactors run for 3 hours
     
   # export data
-  file.name <- paste0(site, "_", year, "_", 
+  file.name <- paste0("data_analyses/", site, "_", year, "_", 
                       analyte, ".rds") # create file name
   saveRDS(changes, file=file.name)
   
@@ -157,5 +157,10 @@ table3 <- nutdat_net %>%
   pivot_wider(names_from = Analyte, values_from = Net_change_hr_m2)
 
 write_csv(table3, path = "data_analyses/table3_output.csv")
+
+# And exporting dataset for use in running the linear mixed effects model
+# using rate values since they are comparable 
+# (umol/surface area of core * hour)
+saveRDS(nutdat_trim, file="data_analyses/nutdat_bioreactors.rds")
 
 # End of script.
