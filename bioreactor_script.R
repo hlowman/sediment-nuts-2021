@@ -20,7 +20,7 @@ library(here)
 nh4dat <- read_csv("data_raw/Bioreactor_NH4_2017_2019.csv")
 no3dat <- read_csv("data_raw/Bioreactor_NO3_2017_2019.csv")
 # Note - using cor_NO3 values below, since these have been corrected
-# to report nothing below the limit of detection (0.5uM)
+# to report nothing below the limit of detection (0.5uM in 2017, and 0.2uM in 2018/2019)
 tdndat <- read_csv("data_raw/Bioreactor_DOC_TDN_2017_2019.csv")
 
 # Aggregate replicates 
@@ -150,5 +150,12 @@ summary <- nutdat_net %>%
             max_all = max(Net_change_hr_m2, na.rm = TRUE)) %>%
   ungroup() %>%
   mutate(daily_mean = mean_all * 24) # convert mean flux to umol/m^2 * day
+
+# Creating another dataframe for table 3 in the manuscript.
+table3 <- nutdat_net %>%
+  select(Year, Site, Analyte, Net_change_hr_m2) %>%
+  pivot_wider(names_from = Analyte, values_from = Net_change_hr_m2)
+
+write_csv(table3, path = "data_analyses/table3_output.csv")
 
 # End of script.
