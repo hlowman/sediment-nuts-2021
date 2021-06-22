@@ -7,7 +7,18 @@
 # nutrient efflux manuscript.
 
 # Models will follow the format:
-# Nutrient ~ Treatment + Site + Year + 1/(Site)
+# Nutrient ~ Treatment + 1/(Site)
+
+# Treatment is the fixed effect - we are investigating to be certain
+# that there was a significant difference between experimental bioreactors
+# (those containing sediment + seawater) and control bioreactors 
+# (those containing only seawater), with the response being the rate of 
+# change in measured nutrient concentrations.
+
+# A random effect of site is being added in to account for the repeated
+# sampling at these sites over the years (although the designation of
+# site is a bit arbitrary, since they're all nearshore marine sediment
+# of the Santa Barbara Channel).
 
 
 # Setup -------------------------------------------------------------------
@@ -30,9 +41,11 @@ dat <- readRDS("data_analyses/nutdat_bioreactors.rds") %>%
 dat_nh4 <- dat %>%
   filter(Analyte == "NH4") %>%
   filter(!is.na(change_hr)) # remove all NAs
+
 dat_no3 <- dat %>%
   filter(Analyte == "NO3") %>%
   filter(!is.na(change_hr))
+
 dat_tdn <- dat %>%
   filter(Analyte == "TDN") %>%
   filter(!is.na(change_hr)) %>%
@@ -65,18 +78,17 @@ hist(dat_tdn$std_change_hr)
 
 ### Data Exploration
 
-# I'm examining Treatment, Year, and Site as factors influencing nutrient results. Here are the boxplots and pairplots necessary for initial inspection of the data.
+# I'm examining Treatment and Site as factors influencing nutrient results. Here are the boxplots and pairplots necessary for initial inspection of the data.
 boxplot(std_change_hr ~ Treatment, data = dat_nh4) # Boxplot by treatment - appears to be an effect, as we expect.
 boxplot(std_change_hr ~ Site, data = dat_nh4) # Boxplot by site - as expected, little effect.
-boxplot(std_change_hr ~ Year, data = dat_nh4) # Boxplot by year - appears to be most variable in 2017 (with prior bioreactor build).
 
 #### STEP 1: Create a linear regression and check residuals.
 
 # Response variable - change in NH4 concentrations
-# Explanatory (fixed) variables - Treatment, Site, Year
+# Explanatory (fixed) variable - Treatment
 
 # Create the initial linear model
-a1 <- lm(std_change_hr ~ Treatment + Year + Site, data = dat_nh4) 
+a1 <- lm(std_change_hr ~ Treatment, data = dat_nh4) 
 # Pull out and examine standardized residuals
 ra1 <- rstandard(a1)
 
@@ -88,22 +100,12 @@ ggplot(data = dat_nh4, aes(x = Treatment, y = ra1)) +
   geom_boxplot() + 
   geom_point() +
   labs(x = "Treatment", y = "Standardised residuals") 
-# very different
-
-ggplot(data = dat_nh4, aes(x = Site, y = ra1)) +
-  geom_boxplot() + 
-  geom_point() +
-  labs(x = "Site", y = "Standardised residuals")
-
-ggplot(data = dat_nh4, aes(x = Year, y = ra1, group = Year)) +
-  geom_boxplot() + 
-  geom_point() +
-  labs(x = "Year", y = "Standardised residuals")
+# very different - may need an added variance structure later
 
 #### STEP 2: Fit the lm() with GLS and compare to lme().
 
-a2 <- gls(std_change_hr ~ Treatment + Year + Site, data = dat_nh4)
-a3 <- lme(std_change_hr ~ Treatment + Year + Site,
+a2 <- gls(std_change_hr ~ Treatment, data = dat_nh4)
+a3 <- lme(std_change_hr ~ Treatment,
           random =~1 | Site, # repeated sampling at each site
           data = dat_nh4)
 anova(a2, a3) # Compares the two models.
@@ -114,7 +116,7 @@ plot(a3, col=1) # Check the residuals.
 qqnorm(a3) # This looks terrible even with transformed data.
 
 # Adding in variance structure based on residuals by treatment
-a4 <- lme(std_change_hr ~ Treatment + Year + Site,
+a4 <- lme(std_change_hr ~ Treatment,
           random =~1 | Site,
           data = dat_nh4,
           weights = varIdent(form =~1 | Treatment))
@@ -137,10 +139,10 @@ anova(a2, a4) # Compares the initial lm and the recent lmem, with additional var
 
 #### STEP 7/8: Step-wise Optimal Fixed Structure
 
-# I want to retain all effects to generate outputs for each.
+# I want to retain all effects.
 
 #### STEP 9: Refit with REML
-afinal <- lme(std_change_hr ~ Treatment + Year + Site,
+afinal <- lme(std_change_hr ~ Treatment,
               random =~1 | Site,
               weights = varIdent(form =~1 | Treatment), 
               method = "REML", 
@@ -155,12 +157,10 @@ anova(afinal)
 #### STEP 10: What does this mean in WORDS?
 # I applied a linear mixed effect modeling approach because the data are nested with samples taken from each site on multiple occasions. My model suggests there is a significant effect of treatment type (experimental/control) on NH4. Random intercepts by site and a variance term by treatment were added.
 
-# Equation: 
-# std(NH4) = 8.03 + 0.83[Exp] - 0.004[Year] 
-# - 0.07[GOLB] + 0.31[MICR] + random + variance
+# Equation: std(NH4) = -0.44 + 0.83[Exp] + random + variance
 
 # BONUS POST HOC:
-aHSD <- glht(afinal, linfct=mcp(Treatment="Tukey")) # Run a Tukey's post hoc analysis.
+aHSD <- glht(afinal, linfct=mcp(Treatment="Tukey")) # Tukey's post hoc
 summary(aHSD) # Exp & Control significantly different from one another. 
 # Note : Use the results of the first run on this function.
 
@@ -171,15 +171,14 @@ summary(aHSD) # Exp & Control significantly different from one another.
 # Boxplots and pairplots for initial inspection of the data.
 boxplot(std_change_hr ~ Treatment, data = dat_no3) # Boxplot by treatment - appears to be an effect, as we expect.
 boxplot(std_change_hr ~ Site, data = dat_no3) # Boxplot by site - some effect?
-boxplot(std_change_hr ~ Year, data = dat_no3) # Boxplot by year - appears to be most variable in 2019.
 
 #### STEP 1: Create a linear regression and check residuals.
 
 # Response variable - change in NO3 concentrations
-# Explanatory (fixed) variables - Treatment, Site, Year
+# Explanatory (fixed) variable - Treatment
 
 # Create the initial linear model
-b1 <- lm(std_change_hr ~ Treatment + Year + Site, data = dat_no3) 
+b1 <- lm(std_change_hr ~ Treatment, data = dat_no3) 
 # Pull out and examine standardized residuals
 rb1 <- rstandard(b1)
 
@@ -193,20 +192,10 @@ ggplot(data = dat_no3, aes(x = Treatment, y = rb1)) +
   labs(x = "Treatment", y = "Standardised residuals") 
 # very different again
 
-ggplot(data = dat_no3, aes(x = Site, y = rb1)) +
-  geom_boxplot() + 
-  geom_point() +
-  labs(x = "Site", y = "Standardised residuals")
-
-ggplot(data = dat_no3, aes(x = Year, y = rb1, group = Year)) +
-  geom_boxplot() + 
-  geom_point() +
-  labs(x = "Year", y = "Standardised residuals")
-
 #### STEP 2: Fit the lm() with GLS and compare to lme().
 
-b2 <- gls(std_change_hr ~ Treatment + Year + Site, data = dat_no3)
-b3 <- lme(std_change_hr ~ Treatment + Year + Site,
+b2 <- gls(std_change_hr ~ Treatment, data = dat_no3)
+b3 <- lme(std_change_hr ~ Treatment,
           random =~1 | Site, # repeated sampling at each site
           data = dat_no3)
 anova(b2, b3) # Compares the two models.
@@ -218,7 +207,7 @@ qqnorm(b3) # This looks better than the last, but let's see what
 # an added variance term might do.
 
 # Adding in variance structure based on residuals by treatment
-b4 <- lme(std_change_hr ~ Treatment + Year + Site,
+b4 <- lme(std_change_hr ~ Treatment,
           random =~1 | Site,
           data = dat_no3,
           weights = varIdent(form =~1 | Treatment))
@@ -244,7 +233,7 @@ anova(b3, b4) # Compares the two most recent models.
 # I want to retain all fixed effects.
 
 #### STEP 9: Refit with REML
-bfinal <- lme(std_change_hr ~ Treatment + Year + Site,
+bfinal <- lme(std_change_hr ~ Treatment,
               random =~1 | Site,
               method = "REML", 
               data = dat_no3)
@@ -256,11 +245,10 @@ summary(bfinal)
 anova(bfinal)
 
 #### STEP 10: What does this mean in WORDS?
-# My model suggests there is a significant effect of year on NO3. Random intercepts by sitewere added.
+# My model suggests there is no significant effect of treatment on NO3. Random intercepts by site were added.
 
 # Equation: 
-# std(NO3) = -821.57 + 0.43[Exp] + 0.41[Year] 
-# + 0.28[GOLB] + 0.71[MICR] + random
+# std(NO3) = -0.13 + 0.27[Exp] + random
 
 # TDN Model ---------------------------------------------------------------
 
@@ -269,15 +257,14 @@ anova(bfinal)
 # Boxplots and pairplots for initial inspection of the data.
 boxplot(std_change_hr ~ Treatment, data = dat_tdn) # Boxplot by treatment - appears to be an effect, as we expect.
 boxplot(std_change_hr ~ Site, data = dat_tdn) # Boxplot by site - no effect.
-boxplot(std_change_hr ~ Year, data = dat_tdn) # Boxplot by year - no effect.
 
 #### STEP 1: Create a linear regression and check residuals.
 
 # Response variable - change in TDN concentrations
-# Explanatory (fixed) variables - Treatment, Site, Year
+# Explanatory (fixed) variable - Treatment
 
 # Create the initial linear model
-c1 <- lm(std_change_hr ~ Treatment + Year + Site, data = dat_tdn) 
+c1 <- lm(std_change_hr ~ Treatment, data = dat_tdn) 
 # Pull out and examine standardized residuals
 rc1 <- rstandard(c1)
 
@@ -289,22 +276,12 @@ ggplot(data = dat_tdn, aes(x = Treatment, y = rc1)) +
   geom_boxplot() + 
   geom_point() +
   labs(x = "Treatment", y = "Standardised residuals") 
-# very different again
-
-ggplot(data = dat_tdn, aes(x = Site, y = rc1)) +
-  geom_boxplot() + 
-  geom_point() +
-  labs(x = "Site", y = "Standardised residuals")
-
-ggplot(data = dat_tdn, aes(x = Year, y = rc1, group = Year)) +
-  geom_boxplot() + 
-  geom_point() +
-  labs(x = "Year", y = "Standardised residuals")
+# very different once more
 
 #### STEP 2: Fit the lm() with GLS and compare to lme().
 
-c2 <- gls(std_change_hr ~ Treatment + Year + Site, data = dat_tdn)
-c3 <- lme(std_change_hr ~ Treatment + Year + Site,
+c2 <- gls(std_change_hr ~ Treatment, data = dat_tdn)
+c3 <- lme(std_change_hr ~ Treatment,
           random =~1 | Site, # repeated sampling at each site
           data = dat_tdn)
 anova(c2, c3) # Compares the two models.
@@ -312,11 +289,11 @@ anova(c2, c3) # Compares the two models.
 #### STEP 3: Decide on a variance structure (aka random terms).
 
 plot(c3, col=1) # Check the residuals. Eek!
-qqnorm(c3) # This looks better than the last, but let's see what
+qqnorm(c3) # This looks better than the firfst, but let's see what
 # an added variance term might do.
 
 # Adding in variance structure based on residuals by treatment
-c4 <- lme(std_change_hr ~ Treatment + Year + Site,
+c4 <- lme(std_change_hr ~ Treatment,
           random =~1 | Site,
           data = dat_tdn,
           weights = varIdent(form =~1 | Treatment))
@@ -342,7 +319,7 @@ anova(c3, c4) # Compares the two most recent models.
 # I want to retain all fixed effects.
 
 #### STEP 9: Refit with REML
-cfinal <- lme(std_change_hr ~ Treatment + Year + Site,
+cfinal <- lme(std_change_hr ~ Treatment,
               random =~1 | Site,
               weights = varIdent(form =~1 | Treatment),
               method = "REML", 
@@ -358,8 +335,7 @@ anova(cfinal)
 # My model suggests there is a significant effect of treatment on TDN. Random intercepts by site and a variance term by treatment were added.
 
 # Equation: 
-# std(TDN) = -356.05 + 1.45[Exp] + 0.18[Year] 
-# - 0.22[GOLB] - 0.16[MICR] + random + variance
+# std(TDN) = -0.68 + 1.46[Exp] + random + variance
 
 # BONUS POST HOC:
 cHSD <- glht(cfinal, linfct=mcp(Treatment="Tukey")) # Tukey's post hoc
