@@ -33,6 +33,7 @@ library(here)
 library(GGally)
 
 # Load necessary dataset
+# Note - the units of rates of change are in uM/hr
 dat <- readRDS("data_analyses/nutdat_bioreactors.rds") %>%
   mutate(Site = factor(Site),
          Treatment = factor(Treatment))
