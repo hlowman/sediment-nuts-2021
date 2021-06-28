@@ -101,7 +101,7 @@ for(year in 2017:2019){ # iterate over year
     mutate(change_hr = change / 3) # all bioreactors run for 3 hours
     
   # export data
-  file.name <- paste0("data_analyses/", site, "_", year, "_", 
+  file.name <- paste0("data_analyses/fluxes/", site, "_", year, "_", 
                       analyte, ".rds") # create file name
   saveRDS(changes, file=file.name)
   
@@ -113,8 +113,7 @@ for(year in 2017:2019){ # iterate over year
 # I chose to export the files so that I could see they mapped correctly individually
 # also for loops need empty receiving dataframes in the environment,
 # so it's often easier to export the files to a working data directory instead
-nutdat_changes <- here("data_analyses/") %>%
-  list.files(pattern = ".rds") %>%
+nutdat_changes <- list.files(path = "data_analyses/fluxes", full.names = TRUE) %>%
   map(readRDS) %>%
   bind_rows()
 
@@ -124,9 +123,10 @@ View(nutdat_changes)
 
 # Next, I'll trim down the dataset to help with flux calculations
 nutdat_trim <- nutdat_changes %>%
-  filter(Treatment %in% c("Control", "Experimental")) %>% # filter out the "before" samples
+  filter(Treatment %in% c("Control", "Experimental")) %>% # filter out "before" samples
   # since they have already served their purpose
-  select(Year, Site, Treatment, Analyte, change_hr) # trim columns
+  # select function being tough here for some reason
+  dplyr::select(Year, Site, Treatment, Analyte, change_hr) # trim columns
 
 # Need to aggregate by control/experimental treatment for each run to calculate net flux
 nutdat_net <- nutdat_trim %>%
@@ -149,7 +149,8 @@ summary <- nutdat_net %>%
             min_all = min(Net_change_hr_m2, na.rm = TRUE),
             max_all = max(Net_change_hr_m2, na.rm = TRUE)) %>%
   ungroup() %>%
-  mutate(daily_mean = mean_all * 24) # convert mean flux to umol/m^2 * day
+  mutate(daily_mean = mean_all * 24, # convert mean flux to umol/m^2 * day
+         daily_mean_30cm = mean_all * 24 * 15) # convert mean flux to umol/m^2 * day to 30 cm sediment depth
 
 # Creating another dataframe for table 3 in the manuscript.
 table3 <- nutdat_net %>%
@@ -160,7 +161,7 @@ write_csv(table3, path = "data_analyses/table3_output.csv")
 
 # And exporting dataset for use in running the linear mixed effects model
 # using rate values since they are comparable 
-# (umol/surface area of core * hour)
+# (uM/surface area of core * hour)
 saveRDS(nutdat_trim, file="data_analyses/nutdat_bioreactors.rds")
 
 # End of script.
