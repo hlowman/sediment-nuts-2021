@@ -52,4 +52,9 @@ pplot <- PWstats %>%
 
 pplot
 
+# mean concentration in the 0-2cm horizon
+top_horiz <- PWstats %>%
+  filter(SED_DEPTH == 1) %>%
+  summarize(meanNH4 = mean(meanConc))
+
 # End of script.

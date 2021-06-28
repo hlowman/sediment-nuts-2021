@@ -139,6 +139,8 @@ nutdat_net <- nutdat_trim %>%
   # convert net flux to umol/m^2 * hour
   mutate(Net_change_hr_m2 = (Net_change_hr * 0.25 * 10000) / 19.6)
 
+# calculate mean net flux from core (not m2) for scaling calculations
+mean(nutdat_net$Net_change_hr, na.rm = TRUE)
 
 # Summary Stats -----------------------------------------------------------
 
