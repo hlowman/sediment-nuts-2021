@@ -159,6 +159,10 @@ table3 <- nutdat_net %>%
   select(Year, Site, Analyte, Net_change_hr_m2) %>%
   pivot_wider(names_from = Analyte, values_from = Net_change_hr_m2)
 
+# additional calc for results/abstract
+table3_plus <- table3 %>%
+  mutate(NH4_Net_change_day_m2 = NH4 * 24)
+
 write_csv(table3, path = "data_analyses/table3_output.csv")
 
 # And exporting dataset for use in running the linear mixed effects model

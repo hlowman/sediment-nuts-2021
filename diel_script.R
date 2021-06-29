@@ -31,6 +31,55 @@ ctd_dat <- read_csv("data_raw/Diel_CTD.csv")
 tides_dat <- read_csv("data_raw/bound_tides_pub.csv")
 
 
+# Additional Summary Statistics -------------------------------------------
+
+# Calculations for inclusion in the manuscript
+
+# mean temperature
+mean(ctd_dat$Temperature)
+
+# minimum temperature
+min(ctd_dat$Temperature)
+
+# maximum temperature
+max(ctd_dat$Temperature)
+
+# mean NH4
+mean(nuts_dat$NH4)
+
+# standard deviation NH4
+sd(nuts_dat$NH4)
+
+# minimum NH4
+min(nuts_dat$NH4)
+
+# maximum NH4
+max(nuts_dat$NH4)
+
+# mean NO3
+mean(nuts_dat$NO3_NO2)
+
+# standard deviation NO3
+sd(nuts_dat$NO3_NO2)
+
+# minimum NO3
+min(nuts_dat$NO3_NO2)
+
+# maximum NO3
+max(nuts_dat$NO3_NO2)
+
+# mean chla
+mean(nuts_dat$Chla, na.rm=TRUE)
+
+# standard deviation chla
+sd(nuts_dat$Chla, na.rm=TRUE)
+
+# minimum chla
+min(nuts_dat$Chla, na.rm=TRUE)
+
+# maximum chla
+max(nuts_dat$Chla, na.rm=TRUE)
+
 # Figures -----------------------------------------------------------------
 
 # Tidal paneled figure
