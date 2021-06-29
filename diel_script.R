@@ -70,7 +70,7 @@ fig_nh4 <- nuts_dat %>%
   ggplot(aes(DateTime, NH4, color=Depth_f)) +
   scale_color_viridis(discrete=TRUE) +
   geom_point(size = 3, stroke = 0.75, alpha = 0.9) +
-  scale_x_datetime(date_labels = "%H:%M", date_breaks = "6 hours") +
+  scale_x_datetime(date_labels = "%H:%M", date_breaks = "8 hours") +
   ylab(expression(paste(NH[4]^{"+"}," (μM)"))) +
   labs(color = "Water Depth (m)") +  
   theme_bw() + 
@@ -81,7 +81,7 @@ fig_nh4 <- nuts_dat %>%
         panel.background = element_blank(),
         axis.title.x=element_blank(),
         axis.text.x=element_blank(),
-        #axis.ticks.x=element_blank(),
+        axis.ticks.x=element_blank(),
         strip.background = element_blank(),
         strip.text.x = element_blank(),
         legend.position = "right")
@@ -99,7 +99,7 @@ fig_no3 <- nuts_dat %>%
   ggplot(aes(DateTime, NO3_NO2, color=Depth_f)) +
   scale_color_viridis(discrete=TRUE) +
   geom_point(size = 3, stroke = 0.75, alpha = 0.9) +
-  scale_x_datetime(date_labels = "%H:%M", date_breaks = "6 hours") +
+  scale_x_datetime(date_labels = "%H:%M", date_breaks = "8 hours") +
   ylab(expression(paste(NO[3]^{"-"}, "+", NO[2]^{"-"}, " (μM)"))) +
   labs(color = "Water Depth (m)") +  
   theme_bw() + 
@@ -112,7 +112,7 @@ fig_no3 <- nuts_dat %>%
         strip.text.x = element_blank(),
         axis.title.x=element_blank(),
         axis.text.x=element_blank(),
-        #axis.ticks.x=element_blank(),
+        axis.ticks.x=element_blank(),
         legend.position = "none")
 
 fig_no3
@@ -128,7 +128,7 @@ fig_chla <- nuts_dat %>%
   ggplot(aes(DateTime, Chla, color=Depth_f)) +
   scale_color_viridis(discrete=TRUE) +
   geom_point(size = 3, stroke = 0.75, alpha = 0.9) +
-  scale_x_datetime(date_labels = "%H:%M", date_breaks = "6 hours") +
+  scale_x_datetime(date_labels = "%H:%M", date_breaks = "8 hours") +
   ylab(expression(paste(italic("chl a"), " (μg/L)"))) +
   labs(color = "Water Depth (m)",
        x = "Sampling Time") +  
@@ -149,16 +149,61 @@ fig_chla
 
 # Temperature paneled figure
 
+dailytemp <- ctd_dat %>%
+  mutate(Trial_f = factor(case_when(DateTime < "2018-08-05 00:00:00" ~ 1,
+                                    DateTime > "2018-08-05 00:00:00" & 
+                                      DateTime < "2018-08-09 00:00:00" ~ 2,
+                                    DateTime > "2018-08-09 00:00:00" ~ 3))) %>%
+  # group by trial, date, and bin data by 0.1 m intervals
+  group_by(Trial_f, DateTime, cut(Depth, breaks=seq(0, 7.3, by = 0.1) )) %>%
+  mutate(Temp_binned = mean(Temperature, na.rm = TRUE)) %>%
+  ungroup() %>%
+  rename(DepthRange = `cut(Depth, breaks = seq(0, 7.3, by = 0.1))`) %>%
+  # need to pull out the depth value from the range to make contouring work
+  separate(col = DepthRange, into = c("start", "end"), sep = ",") %>%
+  mutate(DepthRange_start = parse_number(start),
+         DepthRange_end = parse_number(end)) %>%
+  # and finally need to group so there's only one time-depth measurement
+  group_by(Trial_f, DateTime, DepthRange_start) %>%
+  summarize(Temp_binned_grouped = mean(Temp_binned)) %>%
+  ungroup() %>%
+  ggplot(aes(x = DateTime, y = DepthRange_start, z = Temp_binned_grouped)) + # specify aesthetics
+  scale_y_reverse() + # flip the y axis so values increase with depth
+  geom_contour_filled() + # create contour plot
+  guides(fill = guide_colorsteps(barheight = unit(4, "cm"))) + # edit the legend not to display bins
+  geom_point(shape = 20, color = "white", size=0.1, stroke=0.2) + # adds vertical lines for casts
+  labs(y = "Water Depth (m)",
+       fill = "Temperature (ºC)") +
+  facet_grid(~Trial_f, scales = "free") + # scales free in order to only display a given day's data
+  theme_bw() +
+  theme(text=element_text(family="Times New Roman", size=14),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        strip.background = element_blank(),
+        strip.text.x = element_blank())
 
+dailytemp
 
 # Combine and export figure -----------------------------------------------
 
 full_fig_4 <- dailytides /
+  dailytemp /
   fig_nh4 /
   fig_no3 /
   fig_chla
 
 full_fig_4
 
-# End of script
+# Export map to desktop.
+# ggsave(("Figure_4.tiff"),
+#        path = "/Users/heililowman/Desktop/R_figures/Sediment_N",
+#        width = 25,
+#        height = 25,
+#        units = "cm"
+#        )
 
+# End of script
