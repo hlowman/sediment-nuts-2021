@@ -95,7 +95,7 @@ for(year in 2017:2019){ # iterate over year
     filter(Treatment == "Before") %>%
     pull(mean_clean)
   
-  # calculate changes and rates
+  # calculate changes in concentrations (uM) and rates
   changes <- newdat %>%
     mutate(change = mean_clean - start) %>%
     mutate(change_hr = change / 3) # all bioreactors run for 3 hours
@@ -135,33 +135,60 @@ nutdat_net <- nutdat_trim %>%
   ungroup() %>%
   pivot_wider(names_from = Treatment, values_from = mean_change_hr) %>%
   rename(Experimental_change_hr = Experimental, Control_change_hr = Control) %>%
-  mutate(Net_change_hr = Experimental_change_hr - Control_change_hr) %>%
+  # create new column with net change in uM/hour
+  mutate(Net_change_uM_hr = Experimental_change_hr - Control_change_hr) %>%
   # convert net flux to umol/m^2 * hour
-  mutate(Net_change_hr_m2 = (Net_change_hr * 0.25 * 10000) / 19.6)
+  mutate(Net_flux_hr_m2 = (Net_change_uM_hr * 0.25 * 10000) / 19.6)
 
-# calculate mean net flux from core (not m2) for scaling calculations
-mean(nutdat_net$Net_change_hr, na.rm = TRUE)
+# calculate turnover times in NH4 concentrations
+# first, select only NH4 data
+NH4_only <- nutdat_net %>%
+  filter(Analyte == "NH4")
+
+# mean change in NH4 concentrations
+flux_uM <- mean(NH4_only$Net_change_uM_hr, na.rm = TRUE)
+# for manuscript sig figs' purposes, using 0.2uM
+
+# mean umol in the top 2 cm of a core
+core_umol_existing <- 14 * 0.011 # With 29% porosity, each core has 11.368mL water
+
+# mean umol produced per hour (250mL size reservoirs)
+core_umol_flux <- 0.2 * 0.25
+
+# turnover time a.k.a. time required to replenish existing concentrations
+tt_hr <- core_umol_existing/core_umol_flux
+
+# mean umol in top 15cm of a core
+core_umol_existing15 <- 23.4 * 0.011
+
+# mean umol produced per hour (250mL size reservoirs)
+core_umol_flux15 <- 0.2 * 0.25 * 7.5
+
+# turnover time a.k.a. time required to replenish existing concentrations
+tt_hr15 <- core_umol_existing15/core_umol_flux15
+
+tt_min15 <- tt_hr15 * 60
 
 # Summary Stats -----------------------------------------------------------
 
 # Running some additional calculations for inclusion in the manuscript.
 summary <- nutdat_net %>%
   group_by(Analyte) %>%
-  summarize(mean_all = mean(Net_change_hr_m2, na.rm = TRUE),
-            min_all = min(Net_change_hr_m2, na.rm = TRUE),
-            max_all = max(Net_change_hr_m2, na.rm = TRUE)) %>%
+  summarize(mean_all = mean(Net_flux_hr_m2, na.rm = TRUE),
+            min_all = min(Net_flux_hr_m2, na.rm = TRUE),
+            max_all = max(Net_flux_hr_m2, na.rm = TRUE)) %>%
   ungroup() %>%
   mutate(daily_mean = mean_all * 24, # convert mean flux to umol/m^2 * day
          daily_mean_30cm = mean_all * 24 * 15) # convert mean flux to umol/m^2 * day to 30 cm sediment depth
 
 # Creating another dataframe for table 3 in the manuscript.
 table3 <- nutdat_net %>%
-  select(Year, Site, Analyte, Net_change_hr_m2) %>%
-  pivot_wider(names_from = Analyte, values_from = Net_change_hr_m2)
+  select(Year, Site, Analyte, Net_flux_hr_m2) %>%
+  pivot_wider(names_from = Analyte, values_from = Net_flux_hr_m2)
 
 # additional calc for results/abstract
 table3_plus <- table3 %>%
-  mutate(NH4_Net_change_day_m2 = NH4 * 24)
+  mutate(NH4_Net_flux_day_m2 = NH4 * 24)
 
 write_csv(table3, path = "data_analyses/table3_output.csv")
 

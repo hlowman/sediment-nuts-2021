@@ -57,4 +57,13 @@ top_horiz <- PWstats %>%
   filter(SED_DEPTH == 1) %>%
   summarize(meanNH4 = mean(meanConc))
 
+# mean concentration in all horizons across all sites/depths sampled
+presentation_stats <- porewater %>% # Takes the original dataset and then
+  mutate(depth = case_when(SED_DEPTH == 8.0 ~ 9.0,
+                           TRUE ~ SED_DEPTH)) %>%
+  group_by(depth) %>% # Groups the data and then
+  summarize(meanConc = mean(NH4_pore), # no NAs to worry about
+            sdConc = sd(NH4_pore)) %>% # Calculates means/st deviations
+  ungroup() # Don't forget it!!
+
 # End of script.
