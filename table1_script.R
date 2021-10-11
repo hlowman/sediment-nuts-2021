@@ -57,6 +57,11 @@ top_horiz <- PWstats %>%
   filter(SED_DEPTH == 1) %>%
   summarize(meanNH4 = mean(meanConc))
 
+# mean concentration in the 0-15cm horizon at 20m water depth
+calc_horiz <- PWstats %>%
+  filter(WATER_DEPTH == 20) %>%
+  summarize(meanNH4 = mean(meanConc))
+
 # mean concentration in all horizons across all sites/depths sampled
 presentation_stats <- porewater %>% # Takes the original dataset and then
   mutate(depth = case_when(SED_DEPTH == 8.0 ~ 9.0,

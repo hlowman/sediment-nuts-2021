@@ -155,7 +155,7 @@ NH4_only <- nutdat_net %>%
 flux_uM <- mean(NH4_only$Net_change_uM_hr, na.rm = TRUE)
 # for manuscript sig figs' purposes, using 0.2uM
 
-# mean umol in the top 2 cm of a core
+# mean umol in the top 2 cm of a core (14 uM)
 core_umol_existing <- 14 * 0.011 # With 29% porosity, each core has 11.368mL water
 
 # mean umol produced per hour (250mL size reservoirs)
@@ -164,16 +164,64 @@ core_umol_flux <- 0.2 * 0.25
 # turnover time a.k.a. time required to replenish existing concentrations
 tt_hr <- core_umol_existing/core_umol_flux
 
-# mean umol in top 15cm of a core
-core_umol_existing15 <- 23.4 * 0.011
+# below calcs are for discussion section calculation:
+# mean umol in top 15cm of a core (23.4 uM)
+# see "calc_horiz" in "table1_script.R" for existing NH4 conc
+# volume of water from core volume (39.2 cm^2) * 29% porosity
+# umol = uM * L
+core_umol_existing15 <- 23.4 * 0.011 * 7.5
 
-# mean umol produced per hour (250mL size reservoirs)
+# mean umol produced per hour 
+# uM * 250mL size reservoirs * 7.5 to reach 15cm of sediment
 core_umol_flux15 <- 0.2 * 0.25 * 7.5
 
 # turnover time a.k.a. time required to replenish existing concentrations
 tt_hr15 <- core_umol_existing15/core_umol_flux15
 
 tt_min15 <- tt_hr15 * 60
+
+# Adding water column calculations in here as well
+
+# in 10 m water column, volume of water (m3)
+v_m <- 10 * 1 * 1
+# volume of water (L)
+v_L <- v_m * 1000
+
+# umoles of NH4 using mean diel sampling conc (0.7)
+umol_NH4 <- v_L * 0.7
+mmol_NH4 <- umol_NH4 / 1000
+
+# contribution with only 2 cm of sediment flux
+# using flux of 0.52 mmol m^-2 day^-1
+contribution_2cm <- 0.52 / mmol_NH4
+# 7%
+
+# contribution with 30 cm of sediment flux
+# using flux of 7.8 mmol m^-2 day^-1
+contribution_30cm <- 7.8 / mmol_NH4
+# 111%
+
+# now, into a 20m water column to mimic turnover
+# time in sediments calculations
+
+# in 20 m water column, volume of water (m3)
+v_m_20 <- 20 * 1 * 1
+# volume of water (L)
+v_L_20 <- v_m_20 * 1000
+
+# umoles of NH4 using mean diel sampling conc (0.7)
+umol_NH4_20 <- v_L_20 * 0.7
+mmol_NH4_20 <- umol_NH4_20 / 1000
+
+# contribution with only 2 cm of sediment flux
+# using flux of 0.52 mmol m^-2 day^-1
+contribution_2cm_20 <- 0.52 / mmol_NH4_20
+# 4%
+
+# contribution with 30 cm of sediment flux
+# using flux of 7.8 mmol m^-2 day^-1
+contribution_30cm_20 <- 7.8 / mmol_NH4_20
+# 56%
 
 # Summary Stats -----------------------------------------------------------
 
