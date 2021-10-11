@@ -6,6 +6,10 @@
 # by the array of tidbit temperature sensors deployed at Mohawk
 # Reef for the sediment nutrient recycling manuscript.
 
+# This data was collected by Jason Smith et al. and can be downloaded
+# from the SBC LTER's data repository at the following URL:
+# https://doi.org/10.6073/pasta/f03abadcd706d64dda456352d311f0c1
+
 # Load packages
 library(tidyverse) 
 library(lubridate)

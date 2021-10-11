@@ -29,16 +29,16 @@ write_csv(PWstats, "data_tidy/PWstats.csv")
 # Additional summary statistics for the results section:
 
 # minimum concentration
-min(porewater$NH4_pore)
+min(PWstats$meanConc)
 
 # maximum concentration
-max(porewater$NH4_pore)
+max(PWstats$meanConc)
 
 # mean concentration
-mean(porewater$NH4_pore)
+mean(PWstats$meanConc)
 
 # s.d. of concentration
-sd(porewater$NH4_pore)
+sd(PWstats$meanConc)
 
 # quick visualization of porewater trends
 pplot <- PWstats %>%

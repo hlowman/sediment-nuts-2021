@@ -23,6 +23,8 @@ no3dat <- read_csv("data_raw/Bioreactor_NO3_2017_2019.csv")
 # to report nothing below the limit of detection (0.5uM in 2017, and 0.2uM in 2018/2019)
 tdndat <- read_csv("data_raw/Bioreactor_DOC_TDN_2017_2019.csv")
 
+# All units are currently in uM (micromolar).
+
 # Aggregate replicates 
 nh4dat_ed <- nh4dat %>% # Takes the original dataset
   group_by(Year, Site, Treatment, Sample_ID_1) %>% # groups the data
@@ -140,6 +142,10 @@ nutdat_net <- nutdat_trim %>%
   # convert net flux to umol/m^2 * hour
   mutate(Net_flux_hr_m2 = (Net_change_uM_hr * 0.25 * 10000) / 19.6)
 
+# Size of reservoir: 250mL = 0.25 L
+# Surface area of sediment core: 19.6 cm^2
+# Conversion from cm^2 to m^2: 10,000 cm^2 / m^2
+
 # calculate turnover times in NH4 concentrations
 # first, select only NH4 data
 NH4_only <- nutdat_net %>%
@@ -172,6 +178,24 @@ tt_min15 <- tt_hr15 * 60
 # Summary Stats -----------------------------------------------------------
 
 # Running some additional calculations for inclusion in the manuscript.
+before <- nutdat_clean %>%
+  filter(Treatment == "Before" & Analyte == "NH4")
+
+beforeno3 <- nutdat_clean %>%
+  filter(Treatment == "Before" & Analyte == "NO3")
+
+before_tdn <- nutdat_clean %>%
+  filter(Treatment == "Before" & Analyte == "TDN")
+
+after <- nutdat_clean %>%
+  filter(Treatment == "Experimental" & Analyte == "NH4")
+
+afterno3 <- nutdat_clean %>%
+  filter(Treatment == "Experimental" & Analyte == "NO3")
+
+after_tdn <- nutdat_clean %>%
+  filter(Treatment == "Experimental" & Analyte == "TDN")
+
 summary <- nutdat_net %>%
   group_by(Analyte) %>%
   summarize(mean_all = mean(Net_flux_hr_m2, na.rm = TRUE),
@@ -179,14 +203,19 @@ summary <- nutdat_net %>%
             max_all = max(Net_flux_hr_m2, na.rm = TRUE)) %>%
   ungroup() %>%
   mutate(daily_mean = mean_all * 24, # convert mean flux to umol/m^2 * day
-         daily_mean_30cm = mean_all * 24 * 15) # convert mean flux to umol/m^2 * day to 30 cm sediment depth
+         daily_mean_30cm = mean_all * 24 * 15) # convert mean flux to umol/m^2 * day into 30 cm sediment depth
 
 # Creating another dataframe for table 3 in the manuscript.
 table3 <- nutdat_net %>%
   select(Year, Site, Analyte, Net_flux_hr_m2) %>%
   pivot_wider(names_from = Analyte, values_from = Net_flux_hr_m2)
 
-# additional calc for results/abstract
+# additional calcs for results/abstract
+
+# first, DON = TDN - NH4 - NO3
+don_hr <- 79.111158 - 21.643563 - 8.487654
+don_day <- 1898.6678 - 519.4455 - 203.7037
+
 table3_plus <- table3 %>%
   mutate(NH4_Net_flux_day_m2 = NH4 * 24)
 

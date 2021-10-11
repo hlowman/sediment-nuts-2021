@@ -21,8 +21,7 @@ WCstats <- watercolumn %>% # Takes the original dataset and then
   summarize(meanConc = mean(NH4_water), sdConc = sd(NH4_water)) %>% # Calculates means and standard deviations and then
   ungroup() # Removes groupings.
 
-# Since so few replicates were collected, going to simply report
-# raw values at sampling sites instead.
+# Create new dataset with max water depth included.
 WC_w_sites <- watercolumn %>% # using the original dataset
   mutate(TOTAL_DEPTH = c(15,15,15,15,15,15,15,15,15,5,5,5,7,7,7,10,10,10,15,15,15,20,20,20)) # add total water depth
 
@@ -32,16 +31,16 @@ write_csv(WC_w_sites, "data_tidy/WC_w_sites.csv")
 # Additional summary statistics for the results section:
 
 # minimum concentration
-min(watercolumn$NH4_water)
+min(WCstats$meanConc)
 
 # maximum concentration
-max(watercolumn$NH4_water)
+max(WCstats$meanConc)
 
 # mean concentration
-mean(watercolumn$NH4_water)
+mean(WCstats$meanConc)
 
 # s.d. of concentration
-sd(watercolumn$NH4_water)
+sd(WCstats$meanConc)
 
 # quick visualization of overlying water trends
 wplot <- WC_w_sites %>%
