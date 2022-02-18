@@ -32,10 +32,6 @@ summary <- marine %>%
   group_by(Site) %>%
   summarize(meanOM = mean(perc_OM, na.rm = TRUE),
             sdOM = sd(perc_OM, na.rm = TRUE),
-            meanON = mean(perc_OrgN, na.rm = TRUE),
-            sdON = sd(perc_OrgN, na.rm = TRUE),
-            meanOC = mean(perc_OrgC, na.rm = TRUE),
-            sdOC = sd(perc_OrgC, na.rm = TRUE),
             meanCN = mean(`C/N`, na.rm = TRUE),
             sdCN = sd(`C/N`, na.rm = TRUE),
             medianGS = mean(`Diameter_50.00%`, na.rm = TRUE),
@@ -50,6 +46,19 @@ summary <- marine %>%
 # Export data for inclusion in manuscript.
 write_csv(summary, "data_tidy/sediment_content_stats.csv")
 
-# End of script.
+# Overall summary statistics for results section.
+summary2 <- marine %>%
+  summarize(meanOM = mean(perc_OM, na.rm = TRUE),
+            sdOM = sd(perc_OM, na.rm = TRUE),
+            meanCN = mean(`C/N`, na.rm = TRUE),
+            sdCN = sd(`C/N`, na.rm = TRUE),
+            medianGS = mean(`Diameter_50.00%`, na.rm = TRUE),
+            sdGS = sd(`Diameter_50.00%`, na.rm = TRUE),
+            meanClay = mean(perc_Clay, na.rm = TRUE),
+            sdClay = sd(perc_Clay, na.rm = TRUE),
+            meanSilt = mean(perc_Silt, na.rm = TRUE),
+            sdSilt = sd(perc_Silt, na.rm = TRUE),
+            meanSand = mean(perc_Sand, na.rm = TRUE),
+            sdSand = sd(perc_Sand, na.rm = TRUE))
 
-  
+# End of script.
