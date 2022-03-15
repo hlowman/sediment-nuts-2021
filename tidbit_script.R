@@ -159,4 +159,25 @@ fig3_full + plot_annotation(tag_levels = 'A')
 #        units = "cm"
 #        )
 
+# Model of sediment flushing
+depth <- c(5, 15, 30)
+lag <- c(10, 100, 1845)
+
+flush_dat <- as.data.frame(cbind(depth, lag))
+
+flush_dat <- flush_dat %>%
+  mutate(loglag = log10(lag))
+
+ggplot(flush_dat, aes(x = depth, y = loglag)) +
+  geom_point() +
+  stat_smooth(method = "lm")
+
+# Since that looks pretty good, let's look at the actual model stats.
+log_model <- lm(data = flush_dat, loglag ~ depth)
+
+summary(log_model)
+# R^2 = 0.9955
+# p = 0.03011
+# F(1,1) = 446.5
+
 # End of script.
