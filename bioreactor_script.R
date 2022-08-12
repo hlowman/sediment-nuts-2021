@@ -180,6 +180,22 @@ tt_hr15 <- core_umol_existing15/core_umol_flux15
 
 tt_min15 <- tt_hr15 * 60
 
+# REDO - only to 2cm
+# mean umol in top 2cm of a core (14.0 uM)
+# see "calc_horiz" in "table1_script.R" for existing NH4 conc
+# volume of water from core volume (39.2 cm^3) * 29% porosity
+# umol = uM * L
+core_umol_existing2 <- 14.0 * 0.011
+
+# mean umol produced per hour 
+# uM * 250mL size reservoirs
+core_umol_flux2 <- 0.2 * 0.25
+
+# turnover time a.k.a. time required to replenish existing concentrations
+tt_hr2 <- core_umol_existing2/core_umol_flux2
+
+tt_min2 <- tt_hr2 * 60
+
 # Adding water column calculations in here as well
 
 # in 10 m water column, volume of water (m3)
