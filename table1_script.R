@@ -57,6 +57,11 @@ top_horiz <- PWstats %>%
   filter(SED_DEPTH == 1) %>%
   summarize(meanNH4 = mean(meanConc))
 
+# mean concentration at 12.5cm depth
+bot_horiz <- PWstats %>%
+  filter(SED_DEPTH == 12.5) %>%
+  summarize(meanNH4 = mean(meanConc))
+
 # mean concentration in the 0-15cm horizon at 20m water depth
 calc_horiz <- PWstats %>%
   filter(WATER_DEPTH == 20) %>%
