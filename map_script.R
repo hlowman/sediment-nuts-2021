@@ -54,7 +54,8 @@ camap <- ggplot(ca) +
            ymin = 34.2, ymax = 34.6,
            alpha = 0, color = 'black') + # adds box for zoom in definition
   theme_classic() + 
-  theme(axis.text.x = element_blank(),
+  theme(text=element_text(family="Times New Roman", size=14),
+    axis.text.x = element_blank(),
     axis.text.y = element_blank(),
     axis.ticks = element_blank(),
     axis.line.x = element_blank(),
@@ -85,6 +86,7 @@ fullmap <- ggmap(sb_basemap) + # base google maps tile
   labs(x = "Longitude (WGS84)",
        y = "Latitude") +
   theme_bw() +
+  theme(text=element_text(family="Times New Roman", size=14)) +
   coord_sf(crs = st_crs(4326))
 
 fullmap
@@ -95,7 +97,7 @@ side # side-by-side plot
 
 # Export map to desktop.
 # ggsave(("Figure_1.tiff"),
-#        path = "/Users/heililowman/Desktop/R_figures/Sediment_N",
+#        path = "figures",
 #        width = 25,
 #        height = 10,
 #        units = "cm"
