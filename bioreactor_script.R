@@ -17,24 +17,24 @@ library(patchwork)
 library(here)
 
 # Load necessary datasets
-nh4dat <- read_csv("data_raw/Bioreactor_NH4_2017_2019.csv")
-no3dat <- read_csv("data_raw/Bioreactor_NO3_2017_2019.csv")
+nh4dat <- read.csv("data_raw/Bioreactor_NH4_2017_2019.csv")
+no3dat <- read.csv("data_raw/Bioreactor_NO3_2017_2019.csv")
 # Note - using cor_NO3 values below, since these have been corrected
 # to report nothing below the limit of detection (0.5uM in 2017, and 0.2uM in 2018/2019)
-tdndat <- read_csv("data_raw/Bioreactor_DOC_TDN_2017_2019.csv")
+tdndat <- read.csv("data_raw/Bioreactor_DOC_TDN_2017_2019.csv")
 
 # All units are currently in uM (micromolar).
 
 # Aggregate replicates 
 nh4dat_ed <- nh4dat %>% # Takes the original dataset
-  group_by(Year, Site, Treatment, Sample_ID_1) %>% # groups the data
+  group_by(Year, Site, Treatment, Sample_ID.1) %>% # groups the data
   summarize(meanNH4 = mean(Conc, na.rm = TRUE), 
             sdNH4 = sd(Conc, na.rm = TRUE)) %>% # calculations
   ungroup() %>% # don't forget it!
   mutate(Analyte = "NH4") %>% # add new column for identification
   rename(mean = meanNH4, 
          sd = sdNH4,
-         Sample_ID = Sample_ID_1) %>% # rename columns for combining
+         Sample_ID = Sample_ID.1) %>% # rename columns for combining
   filter(Site != "GOSL") %>% # remove estuarine results
   drop_na(Treatment) # remove results from other runs
 
@@ -268,6 +268,9 @@ summary <- nutdat_net %>%
   ungroup() %>%
   mutate(daily_mean = mean_all * 24, # convert mean flux to umol/m^2 * day
          daily_mean_30cm = mean_all * 24 * 15) # convert mean flux to umol/m^2 * day into 30 cm sediment depth
+
+# Note - the results of the "summary" dataframe creation above are the ones
+# cited in the results and the abstract sections in the manuscript.
 
 # Creating another dataframe for table 3 in the manuscript.
 table3 <- nutdat_net %>%
