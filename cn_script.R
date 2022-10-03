@@ -28,10 +28,13 @@ marine <- rapid %>%
   mutate(`C/N` = as.numeric(`C/N`))
 
 # Generate summary statistics.
+# a.k.a. Table 3 in the final manuscript.
 summary <- marine %>%
   group_by(Site) %>%
   summarize(meanOM = mean(perc_OM, na.rm = TRUE),
             sdOM = sd(perc_OM, na.rm = TRUE),
+            meanOC = mean(perc_OrgC, na.rm = TRUE),
+            sdOC = sd(perc_OrgC, na.rm = TRUE),
             meanCN = mean(`C/N`, na.rm = TRUE),
             sdCN = sd(`C/N`, na.rm = TRUE),
             medianGS = mean(`Diameter_50.00%`, na.rm = TRUE),
@@ -50,6 +53,8 @@ write_csv(summary, "data_tidy/sediment_content_stats.csv")
 summary2 <- marine %>%
   summarize(meanOM = mean(perc_OM, na.rm = TRUE),
             sdOM = sd(perc_OM, na.rm = TRUE),
+            meanOC = mean(perc_OrgC, na.rm = TRUE),
+            sdOC = sd(perc_OrgC, na.rm = TRUE),
             meanCN = mean(`C/N`, na.rm = TRUE),
             sdCN = sd(`C/N`, na.rm = TRUE),
             medianGS = mean(`Diameter_50.00%`, na.rm = TRUE),
