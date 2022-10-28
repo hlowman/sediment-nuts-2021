@@ -293,4 +293,7 @@ write_csv(table3, path = "data_analyses/table3_output.csv")
 # (uM/surface area of core * hour)
 saveRDS(nutdat_trim, file="data_analyses/nutdat_bioreactors.rds")
 
+# Also exporting net flux dataset for publication.
+saveRDS(nutdat_net, file="data_analyses/nutdat_net_bioreactors.rds")
+
 # End of script.
